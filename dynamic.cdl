@@ -8,32 +8,38 @@ import( "HelloWorld.cdl" );
  */
 
 signature sDynamic {
-    void initialize();
-    void do_something();
-    void finalize();
+    void initialize( void );
+    void do_something( void );
+    void finalize( void );
 };
-
 signature sGetDescriptor {
     ER getDescriptor( [out] Descriptor(sDynamic) *pDesc );
 };
-signature sSetDescriptor {
-    ER setDescriptor( [in] Descriptor(sDynamic) desc );
-};
+// signature sSetDescriptor {
+//     ER setDescriptor( [in] Descriptor(sDynamic) desc );
+// };
 
 celltype tTaskMain {
     entry sTaskBody eBody;
-    [dynamic]
+    [dynamic,optional]
         call sDynamic cDynamic;
-    [ref_desc]
-        call sDynamic cRefDesc;
+    // [ref_desc]
+    //     call sDynamic cRefDesc;
     call sGetDescriptor cGetDescriptor;
-    entry sSetDescriptor eSetDescriptor;
+    // entry sSetDescriptor eSetDescriptor;
+};
+
+celltype tRefDesc {
+    entry sGetDescriptor eGetDescriptor;
+    [ref_desc]
+        call sDynamic cDynamic;
 };
 
 celltype tDynamic {
     entry sDynamic eDynamic;
 };
 
+/* 組み上げ */
 cell tTask Task {
     taskAttribute = C_EXP("TA_ACT");
     priority      = 11;
@@ -44,7 +50,13 @@ cell tTask Task {
 [in_through()] // リージョン内への結合の許可
 region rTEMP{
     cell tTaskMain TaskMain {
-        cTECSInfo  = TECSInfo.eTECSInfo;
+        // cDynamic = Dynamic.eDynamic;
+        cGetDescriptor = RefDesc.eGetDescriptor;
     };
+    cell tDynamic Dynamic {
 
+    };
+    cell tRefDesc RefDesc {
+        cDynamic = Dynamic.eDynamic;
+    };
 };
