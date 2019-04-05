@@ -8,9 +8,9 @@ import( "HelloWorld.cdl" );
  */
 
 signature sDynamic {
-    initialize();
-    do_something();
-    finalize();
+    void initialize();
+    void do_something();
+    void finalize();
 };
 
 signature sGetDescriptor {
