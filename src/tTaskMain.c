@@ -18,6 +18,13 @@
  *   [dynamic, optional]
  *      void           cDynamic_set_descriptor( Descriptor( sDynamic ) desc );
  *      void           cDynamic_unjoin(  );
+ * call port: cRefDesc signature: sDynamic context:task
+ *   void           cRefDesc_initialize( );
+ *   void           cRefDesc_do_something( );
+ *   void           cRefDesc_finalize( );
+ *   [ref_desc]
+ *      Descriptor( sDynamic ) cRefDesc_refer_to_descriptor();
+ *      Descriptor( sDynamic ) cRefDesc_ref_desc()      (same as above; abbreviated version);
  * call port: cGetDescriptor signature: sGetDescriptor context:task
  *   ER             cGetDescriptor_getDescriptor( Descriptor( sDynamic )* pDesc );
  *
@@ -56,7 +63,8 @@ eBody_main(CELLIDX idx)
 
 	/* ここに処理本体を記述します #_TEFB_# */
     Descriptor( sDynamic ) desc;
-    cGetDescriptor_getDescriptor( &desc );
+    // cGetDescriptor_getDescriptor( &desc ); // RefDescセルを介してDescを取得する
+    desc = cRefDesc_refer_to_descriptor(); // 直接Descを取得する
     cDynamic_set_descriptor( desc );
     cDynamic_initialize();
 }

@@ -23,8 +23,8 @@ celltype tTaskMain {
     entry sTaskBody eBody;
     [dynamic,optional]
         call sDynamic cDynamic;
-    // [ref_desc]
-    //     call sDynamic cRefDesc;
+    [ref_desc]
+        call sDynamic cRefDesc;
     call sGetDescriptor cGetDescriptor;
     // entry sSetDescriptor eSetDescriptor;
 };
@@ -52,6 +52,7 @@ region rTEMP{
     cell tTaskMain TaskMain {
         // cDynamic = Dynamic.eDynamic;
         cGetDescriptor = RefDesc.eGetDescriptor;
+        cRefDesc = Dynamic.eDynamic;
     };
     cell tDynamic Dynamic {
 
