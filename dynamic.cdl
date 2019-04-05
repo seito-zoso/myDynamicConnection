@@ -1,7 +1,7 @@
 import( <cygwin_kernel.cdl> );
-import( <TECSInfo.cdl> );
-import( <TECSInfoAccessor.cdl> );
-import( "HelloWorld.cdl" );
+// import( <TECSInfo.cdl> );
+// import( <TECSInfoAccessor.cdl> );
+// import( "HelloWorld.cdl" );
 
 /*
  * TECSInfo 使用サンプル
