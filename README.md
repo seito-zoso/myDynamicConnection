@@ -4,7 +4,6 @@
 ## コンポーネント図
 <img src="https://github.com/seito-zoso/myDynamicConnection/blob/images/image.JPG" width=80%>
 
-
 ## 対象
 TECSで開発をはじめたての方
 
@@ -20,99 +19,152 @@ TECS **シグニチャディスクリプタ** は簡単にいうと、シグニ�
 ## 実装
 実際に動的結合を実装してみます．
 
+今回は以下のセルに動的結合するとします．
+
+```:dynamic.cdl
+signature sDynamic {
+    void say_str( void );
+};
+celltype tDynamic {
+    entry sDynamic eDynamic;
+    attr {
+        char *str;
+    };
+};
+cell tDynamic DynamicA {
+    str = "Hello A";
+};
+cell tDynamic DynamicB {
+    str = "Hello B";
+};
+```
+同一セルタイプを持つ異なるセルを用意しました．区別できるように属性にstrを持たせ、受け口関数で喋らせます．
+
+動的結合には
+
 1. 直接参照呼び口を持つ方法
 1. 他のセルを介してディスクリプタを取得する方法
 
 があります．それぞれ見ていきます．
 
-### 参照呼び口を持つ方法
+### １．参照呼び口を持つ方法
 
-基本実装です．
+基本となる実装です．
 まず、CDLコードは以下のようになります．
 
-`celltype tTaskMain { /* 動的結合するセル */
+```:dynamic.cdl
+celltype tTaskMain { /* 動的結合するセル */
     entry sTaskBody eBody;
-    [dynamic,optional] /* 動的呼び口 */
+    [dynamic, optional] /* 動的呼び口 */
         call sDynamic cDynamic;
-    [ref_desc] /* 参照呼び口 */
-        call sDynamic cRefDesc;
+    [ref_desc, optional] /* 参照呼び口 */
+        call sDynamic cRefDesc[];
 };
 
-celltype tDynamic { /* 動的結合されるセル */
-    entry sDynamic eDynamic;
-};`
+cell tTaskMain TaskMain {
+    cGetDescriptor = RefDesc.eGetDescriptor;
+    cRefDesc[] = DynamicA.eDynamic;
+    cRefDesc[] = DynamicB.eDynamic;
+};
+```
 
 tTaskMainセルがtDynamicセルに動的結合します．
 [ref_desc]指定子をつけることで参照呼び口を設けることができます．
+今回は２つのセルに対して呼び口配列で実装します．
 
 次に、tTaskMainセルタイプコードです．
 
-`void eBody_main(CELLIDX idx)
+```c:tTaskMain.c
+void eBody_main(CELLIDX idx)
 {
   Descriptor( sDynamic ) desc;
-  desc = cRefDesc_refer_to_descriptor();
+
+  desc = cRefDesc_refer_to_descriptor(0);
   cDynamic_set_descriptor( desc );
-  cDynamic_function();
-}`
+  cDynamic_say_str();
+
+  desc = cRefDesc_refer_to_descriptor(1);
+  cDynamic_set_descriptor( desc );
+  cDynamic_say_str();
+}
+```
 
 １行目ではsDynamic型のシグニチャディスクリプタ **desc** を宣言しています．
 次の行では **desc** に値を代入しています．
 参照呼び口を設置したのでrefer_to_descriptor関数が使用可能です．これによりDynamicセルへのディスクリプタを取得可能です．
+呼び口配列で定義したので、引数０はDynamicAセル、引数１はDynamicBセルへのディスクリプタを取得します．
 
-set_descriptorで引数に指定したディスクリプタの通りに動的結合します．
-最後の行では動的結合したので、Dynamicセルの受け口関数を使用することができています．
+最後にset_descriptorで引数に指定したディスクリプタの通りに動的結合します．
+これでDynamicセルの受け口関数を使用することができます．
 
 **ディスクリプタをgetしてsetする．** この流れが基本です．
 
-### 他のセルを介してディスクリプタを取得する方法
+### ２．他のセルを介してディスクリプタを取得する方法
 
 他のセルに参照呼び口を持たせておくといった方法もあります．基本的な原理は同じです．
 CDLコードです．
 
-`signature sGetDescriptor {
-    void getDescriptor( [out] Descriptor(sDynamic) *pDesc );
+```:dynamic.cdl
+signature sGetDescriptor {
+    void getDescriptor( [out] Descriptor(sDynamic) *pDesc, [in] int ith );
 };
 
 celltype tTaskMain { /* 動的結合するセル */
     entry sTaskBody eBody;
-    [dynamic,optional]
+    [dynamic, optional]
         call sDynamic cDynamic;
     call sGetDescriptor cGetDescriptor;
 };
 celltype tRefDesc { /* ディスクリプタを渡すセル */
     entry sGetDescriptor eGetDescriptor;
     [ref_desc] /* 参照呼び口 */
-        call sDynamic cDynamic;
+        call sDynamic cDynamic[];
 };
-celltype tDynamic { /* 動的結合されるセル */
-    entry sDynamic eDynamic;
-};`
 
-sGetDescriptorではgetDescriptor()関数により、ポインタでディスクリプタ連れていきDynamicセルへのディスクリプタを代入します．
+cell tTaskMain TaskMain {
+    cGetDescriptor = RefDesc.eGetDescriptor;
+};
+cell tRefDesc RefDesc {
+    cRefDesc[] = DynamicA.eDynamic;
+    cRefDesc[] = DynamicB.eDynamic;
+};
+```
+
+sGetDescriptorではgetDescriptor()関数により、ポインタでディスクリプタ連れていきDynamicセルへのディスクリプタを代入します．第二引数ithで呼び口配列の添数を指定します．
 見てわかる通り、先の例と違うのは仲介としてtRefDescセルを設けていることだけです．
 
-tRefDescセルタイプコードは以下のようにし
+tRefDescセルタイプコードは以下の通り
 
-`void eGetDescriptor_getDescriptor(CELLIDX idx, Descriptor( sDynamic )* pDesc)
+```c:tRefDesc.c
+void eGetDescriptor_getDescriptor(CELLIDX idx, Descriptor( sDynamic )* pDesc, int ith)
 {
-  *pDesc = cDynamic_refer_to_descriptor();
-}`
+  *pDesc = cDynamic_refer_to_descriptor(ith);
+}
+```
+
 
 参照呼び口を設置したのでDynamicへのディスクリプタを取得可能です．
 
 tTaskMainセルタイプコードは
 
-`void eBody_main(CELLIDX idx)
+```c:tTaskMain.c
+void eBody_main(CELLIDX idx)
 {
   Descriptor( sDynamic ) desc;
-  cGetDescriptor_getDescriptor( &desc );
+
+  cGetDescriptor_getDescriptor( &desc, 0 );
   cDynamic_set_descriptor( desc );
-  cDynamic_function();
-}`
+  cDynamic_say_str();
+
+  cGetDescriptor_getDescriptor( &desc, 1 );
+  cDynamic_set_descriptor( desc );
+  cDynamic_say_str();
+}
+```
 
 とすれば、Dynamicセルに動的結合できます．
 
-今回も **ディスクリプタをgetしてsetする**　流れです．
+今回も **ディスクリプタをgetしてsetする** 流れです．
 
 ## 練習
 githubより[myDynamicConnection](https://github.com/seito-zoso/myDynamicConnection)をtecsgenディレクトリにダウンロードしてください．
