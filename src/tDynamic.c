@@ -9,6 +9,9 @@
  * #[<...>]# から #[</...>]# で囲まれたコメントは編集しないでください
  * tecsmerge によるマージに使用されます
  *
+ * 属性アクセスマクロ #_CAAM_#
+ * str              char*            ATTR_str
+ *
  * #[</PREAMBLE>]# */
 
 /* プロトタイプ宣言や変数の定義をここに書きます #_PAC_# */
@@ -26,13 +29,13 @@
  * context:    task
  * #[</ENTRY_PORT>]# */
 
-/* #[<ENTRY_FUNC>]# eDynamic_initialize
- * name:         eDynamic_initialize
- * global_name:  tDynamic_eDynamic_initialize
+/* #[<ENTRY_FUNC>]# eDynamic_say_str
+ * name:         eDynamic_say_str
+ * global_name:  tDynamic_eDynamic_say_str
  * oneway:       false
  * #[</ENTRY_FUNC>]# */
 void
-eDynamic_initialize(CELLIDX idx)
+eDynamic_say_str(CELLIDX idx)
 {
 	CELLCB	*p_cellcb;
 	if (VALID_IDX(idx)) {
@@ -43,47 +46,7 @@ eDynamic_initialize(CELLIDX idx)
 	} /* end if VALID_IDX(idx) */
 
 	/* ここに処理本体を記述します #_TEFB_# */
-		printf("initialize\n");
-}
-
-/* #[<ENTRY_FUNC>]# eDynamic_do_something
- * name:         eDynamic_do_something
- * global_name:  tDynamic_eDynamic_do_something
- * oneway:       false
- * #[</ENTRY_FUNC>]# */
-void
-eDynamic_do_something(CELLIDX idx)
-{
-	CELLCB	*p_cellcb;
-	if (VALID_IDX(idx)) {
-		p_cellcb = GET_CELLCB(idx);
-	}
-	else {
-		/* エラー処理コードをここに記述します */
-	} /* end if VALID_IDX(idx) */
-
-	/* ここに処理本体を記述します #_TEFB_# */
-		printf("do_something\n");
-}
-
-/* #[<ENTRY_FUNC>]# eDynamic_finalize
- * name:         eDynamic_finalize
- * global_name:  tDynamic_eDynamic_finalize
- * oneway:       false
- * #[</ENTRY_FUNC>]# */
-void
-eDynamic_finalize(CELLIDX idx)
-{
-	CELLCB	*p_cellcb;
-	if (VALID_IDX(idx)) {
-		p_cellcb = GET_CELLCB(idx);
-	}
-	else {
-		/* エラー処理コードをここに記述します */
-	} /* end if VALID_IDX(idx) */
-
-	/* ここに処理本体を記述します #_TEFB_# */
-		printf("finalize\n");
+  printf( "%s\n\n", ATTR_str );
 }
 
 /* #[<POSTAMBLE>]#

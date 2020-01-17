@@ -10,13 +10,13 @@
  * tecsmerge によるマージに使用されます
  *
  * 呼び口関数 #_TCPF_#
- * call port: cDynamic signature: sDynamic context:task
- *   void           cDynamic_initialize( );
- *   void           cDynamic_do_something( );
- *   void           cDynamic_finalize( );
+ * call port: cRefDesc signature: sDynamic context:task optional:true
+ *   bool_t     is_cRefDesc_joined(int subscript)        check if joined
+ *   void           cRefDesc_say_str( subscript );
+ *       subscript:  0...(NCP_cRefDesc-1)
  *   [ref_desc]
- *      Descriptor( sDynamic ) cDynamic_refer_to_descriptor();
- *      Descriptor( sDynamic ) cDynamic_ref_desc()      (same as above; abbreviated version);
+ *      Descriptor( sDynamic ) cRefDesc_refer_to_descriptor( int_t subscript );
+ *      Descriptor( sDynamic ) cRefDesc_ref_desc( int_t subscript )      (same as above; abbreviated version);
  *
  * #[</PREAMBLE>]# */
 
@@ -40,22 +40,19 @@
  * global_name:  tRefDesc_eGetDescriptor_getDescriptor
  * oneway:       false
  * #[</ENTRY_FUNC>]# */
-ER
-eGetDescriptor_getDescriptor(CELLIDX idx, Descriptor( sDynamic )* pDesc)
+void
+eGetDescriptor_getDescriptor(CELLIDX idx, Descriptor( sDynamic )* pDesc, int ith)
 {
-	ER		ercd = E_OK;
 	CELLCB	*p_cellcb;
 	if (VALID_IDX(idx)) {
 		p_cellcb = GET_CELLCB(idx);
 	}
 	else {
-		return(E_ID);
+		/* エラー処理コードをここに記述します */
 	} /* end if VALID_IDX(idx) */
 
 	/* ここに処理本体を記述します #_TEFB_# */
-
-	*pDesc = cDynamic_refer_to_descriptor();
-	return(ercd);
+	*pDesc = cRefDesc_refer_to_descriptor( ith );
 }
 
 /* #[<POSTAMBLE>]#

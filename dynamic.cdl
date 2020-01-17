@@ -1,42 +1,32 @@
 import( <cygwin_kernel.cdl> );
-// import( <TECSInfo.cdl> );
-// import( <TECSInfoAccessor.cdl> );
-// import( "HelloWorld.cdl" );
-
-/*
- * TECSInfo 使用サンプル
- */
 
 signature sDynamic {
-    void initialize( void );
-    void do_something( void );
-    void finalize( void );
+    void say_str( void );
 };
 signature sGetDescriptor {
-    ER getDescriptor( [out] Descriptor(sDynamic) *pDesc );
+    void getDescriptor( [out] Descriptor(sDynamic) *pDesc, [in] int ith );
 };
-// signature sSetDescriptor {
-//     ER setDescriptor( [in] Descriptor(sDynamic) desc );
-// };
 
 celltype tTaskMain {
     entry sTaskBody eBody;
-    [dynamic,optional]
+    [dynamic, optional]
         call sDynamic cDynamic;
-    [ref_desc]
-        call sDynamic cRefDesc;
+    [ref_desc, optional]
+        call sDynamic cRefDesc[];
     call sGetDescriptor cGetDescriptor;
-    // entry sSetDescriptor eSetDescriptor;
 };
 
 celltype tRefDesc {
     entry sGetDescriptor eGetDescriptor;
-    [ref_desc]
-        call sDynamic cDynamic;
+    [ref_desc, optional]
+        call sDynamic cRefDesc[];
 };
 
 celltype tDynamic {
     entry sDynamic eDynamic;
+    attr {
+        char *str;
+    };
 };
 
 /* 組み上げ */
@@ -48,16 +38,20 @@ cell tTask Task {
 };
 
 [in_through()] // リージョン内への結合の許可
-region rTEMP{
+region rTEMP {
     cell tTaskMain TaskMain {
-        // cDynamic = Dynamic.eDynamic;
         cGetDescriptor = RefDesc.eGetDescriptor;
-        cRefDesc = Dynamic.eDynamic;
-    };
-    cell tDynamic Dynamic {
-
+        cRefDesc[] = DynamicA.eDynamic;
+        cRefDesc[] = DynamicB.eDynamic;
     };
     cell tRefDesc RefDesc {
-        cDynamic = Dynamic.eDynamic;
+        cRefDesc[] = DynamicA.eDynamic;
+        cRefDesc[] = DynamicB.eDynamic;
+    };
+    cell tDynamic DynamicA {
+        str = "Hello A";
+    };
+    cell tDynamic DynamicB {
+        str = "Hello B";
     };
 };

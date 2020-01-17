@@ -12,19 +12,17 @@
  * 呼び口関数 #_TCPF_#
  * call port: cDynamic signature: sDynamic context:task optional:true
  *   bool_t     is_cDynamic_joined()                     check if joined
- *   void           cDynamic_initialize( );
- *   void           cDynamic_do_something( );
- *   void           cDynamic_finalize( );
+ *   void           cDynamic_say_str( );
  *   [dynamic, optional]
  *      void           cDynamic_set_descriptor( Descriptor( sDynamic ) desc );
  *      void           cDynamic_unjoin(  );
- * call port: cRefDesc signature: sDynamic context:task
- *   void           cRefDesc_initialize( );
- *   void           cRefDesc_do_something( );
- *   void           cRefDesc_finalize( );
+ * call port: cRefDesc signature: sDynamic context:task optional:true
+ *   bool_t     is_cRefDesc_joined(int subscript)        check if joined
+ *   void           cRefDesc_say_str( subscript );
+ *       subscript:  0...(NCP_cRefDesc-1)
  *   [ref_desc]
- *      Descriptor( sDynamic ) cRefDesc_refer_to_descriptor();
- *      Descriptor( sDynamic ) cRefDesc_ref_desc()      (same as above; abbreviated version);
+ *      Descriptor( sDynamic ) cRefDesc_refer_to_descriptor( int_t subscript );
+ *      Descriptor( sDynamic ) cRefDesc_ref_desc( int_t subscript )      (same as above; abbreviated version);
  * call port: cGetDescriptor signature: sGetDescriptor context:task
  *   ER             cGetDescriptor_getDescriptor( Descriptor( sDynamic )* pDesc );
  *
@@ -62,11 +60,38 @@ eBody_main(CELLIDX idx)
 	} /* end if VALID_IDX(idx) */
 
 	/* ここに処理本体を記述します #_TEFB_# */
-    Descriptor( sDynamic ) desc;
-    // cGetDescriptor_getDescriptor( &desc ); // RefDescセルを介してDescを取得する
-    desc = cRefDesc_refer_to_descriptor(); // 直接Descを取得する
-    cDynamic_set_descriptor( desc );
-    cDynamic_initialize();
+  Descriptor( sDynamic ) desc1, desc2;
+/* 直接Descを取得する */
+  printf( "参照呼び口によりDecsを取得します\n" );
+
+  printf( "セルDynamicA に接続\n" );
+  desc1 = cRefDesc_refer_to_descriptor(0);
+  cDynamic_set_descriptor( desc1 );
+  cDynamic_say_str();
+
+  printf( "セルDynamicB に接続\n" );
+  desc1 = cRefDesc_refer_to_descriptor(1);
+  cDynamic_set_descriptor( desc1 );
+  cDynamic_say_str();
+  /* 結合解除 */
+  cDynamic_unjoin();
+
+  printf( "結合を解除しました\n\n" );
+
+/* RefDescセルを介してDescを取得する */
+  printf( "セルRefDescを介してDecsを取得します\n" );
+
+  printf( "セルDynamicA に接続\n" );
+  cGetDescriptor_getDescriptor( &desc2, 0 );
+  cDynamic_set_descriptor( desc2 );
+  cDynamic_say_str();
+
+  printf( "セルDynamicB に接続\n" );
+  cGetDescriptor_getDescriptor( &desc2, 1 );
+  cDynamic_set_descriptor( desc2 );
+  cDynamic_say_str();
+  /* 結合解除 */
+  cDynamic_unjoin();
 }
 
 /* #[<POSTAMBLE>]#
